@@ -12,18 +12,22 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
+    private final static String LOG = MainActivity.class.getSimpleName();
     private final static int REQUEST_ENABLE_BT = 123;
     private Map mArrayAdapter ;
     private TextView textview;
     private BroadcastReceiver btReceiver=null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,9 +54,8 @@ public class MainActivity extends AppCompatActivity {
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                     mArrayAdapter.put(device.getName(),device.getAddress());
                 }if(BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)){
-                    textview.append("fertig mit suchen");
-                    textview.append(""+mArrayAdapter.size());
-
+                    textview.append(mArrayAdapter.size() + " Gerät(e) gefunden!");
+                    showAll();
                 }
             }
         };
@@ -62,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
         registerReceiver(btReceiver,filter);
 
         Set<BluetoothDevice> pairedDevices = adapter.getBondedDevices();
-// If there are paired devices
+        // If there are paired devices
         if (pairedDevices.size() > 0) {
             // Loop through paired devices
             for (BluetoothDevice device : pairedDevices) {
@@ -71,10 +74,12 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        Log.d(LOG , "Nur ein Test");
         int bt = ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.BLUETOOTH);
         int btadmin = ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.BLUETOOTH_ADMIN);
         int btCoars = ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION);
         int btFine = ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION);
+        Log.d(LOG, bt + "bt " + btadmin + " btadmin " + btCoars + " btCoars " + btFine + " btFine " + PackageManager.PERMISSION_GRANTED + "Permission_sGranted");
         if (bt+btadmin+btCoars+btFine != PackageManager.PERMISSION_GRANTED ) {
             ActivityCompat.requestPermissions(MainActivity.this,
                     new String[]{
@@ -102,6 +107,16 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
+
+    private void showAll() {
+        Iterator it = mArrayAdapter.keySet().iterator();
+        while(it.hasNext()) {
+            String name = it.next().toString();
+            textview.append("Gerät : " + name+ "\n");
+            textview.append("Adresse : " + mArrayAdapter.get(name)+ "\n");
+        }
+    }
+
     public void onActivityResult(int requestCode,int resultCode, Intent data){
         textview.setText(" der requestcode ist " + requestCode + "\n" );
         textview.append("der resultcode ist " + resultCode + "\n");
@@ -134,3 +149,4 @@ public class MainActivity extends AppCompatActivity {
         unregisterReceiver(btReceiver);
     }
 }
+//https://developer.android.com/guide/topics/connectivity/bluetooth.html
